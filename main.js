@@ -22,6 +22,7 @@ export default class Main {
     this.initLight();
     this.initObject();
     this.render();
+    
   }
 
   /**

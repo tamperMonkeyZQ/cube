@@ -50,7 +50,7 @@ function SimpleCube(x, y, z, num, len, colors) {
       // var cubegeo = new THREE.BoxGeometry(30, 30, 30);
       // var cube = new THREE.Mesh(cubegeo, materials);
       var cube = new THREE.Mesh(
-        new RoundedBoxGeometry(50, 0.12, 3 ),
+        new RoundedBoxGeometry(20, 0.12, 3 ),
         // new THREE.MeshLambertMaterial().clone()
       );
       cube.material.color.setHex(0x08101a);
@@ -113,12 +113,12 @@ export default class Rubik {
 		// 	this.object.add( piece );
 
     // } );
-    // var themes = new Themes();
+    var themes = new Themes();
     // this.updateColors( themes.getColors());
     this.cubes = SimpleCube(BasicParams.x, BasicParams.y, BasicParams.z, BasicParams.num, BasicParams.len, BasicParams.colors);//生成魔方小正方体
     this.generatePositions();
     this.generateEdges();
-    this.updateColors();
+    this.updateColors(themes.getColors());
     console.log(this.edges);
     for (var i = 0; i < this.cubes.length; i++) {
       var item = this.cubes[i];
@@ -166,7 +166,7 @@ export default class Rubik {
     this.pieces = [];
     this.edges = [];
     const mainMaterial = new THREE.MeshLambertMaterial();
-    const pieceSize = 160;
+    const pieceSize = 21;
     const edgeGeometry = RoundedPlaneGeometry(
 			pieceSize,
 			this.geometry.edgeCornerRoundness,
@@ -185,12 +185,17 @@ export default class Rubik {
 
 				const edge = new THREE.Mesh( edgeGeometry, mainMaterial.clone() );
 				const name = [ 'L', 'R', 'D', 'U', 'B', 'F' ][ position ];
-				const distance = pieceSize / 2;
-
-				edge.position.set(
-				  distance * [ - 1, 1, 0, 0, 0, 0 ][ position ],
-				  distance * [ 0, 0, - 1, 1, 0, 0 ][ position ],
-				  distance * [ 0, 0, 0, 0, - 1, 1 ][ position ]
+        const distance = pieceSize/2;
+        console.log([ 0, 0, 0, 0, - 1, 1 ][ position ]);
+				// edge.position.set(
+				//   distance * [ - 1, 1, 0, 0, 0, 0 ][ position ],
+				//   distance * [ 0, 0, - 1, 1, 0, 0 ][ position ],
+        //   distance * [ 0, 0, 0, 0, - 1, 1 ][ position ]
+        // );
+        edge.position.set(
+          50,
+          0,
+          0
 				);
 
 				edge.rotation.set(
@@ -230,7 +235,9 @@ export default class Rubik {
 		if ( typeof this.pieces !== 'object' && typeof this.edges !== 'object' ) return;
 
     // this.pieces.forEach( piece => piece.userData.cube.material.color.setHex( colors.P ) );
-    this.edges.forEach( edge => edge.material.color.setHex(0x41aac8));
+    // var edge = this.edges.pop();
+    // edge.material.color.setHex(colors[ edge.name ])
+    this.edges.forEach( edge => edge.material.color.setHex(colors[ edge.name ]));
 
 	}
 }
