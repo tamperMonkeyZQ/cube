@@ -50,7 +50,7 @@ function SimpleCube(x, y, z, num, len, colors) {
       // var cubegeo = new THREE.BoxGeometry(30, 30, 30);
       // var cube = new THREE.Mesh(cubegeo, materials);
       var cube = new THREE.Mesh(
-        new RoundedBoxGeometry(20, 0.12, 3 ),
+        new RoundedBoxGeometry(49.5, 0.12, 3 ),
         // new THREE.MeshLambertMaterial().clone()
       );
       cube.material.color.setHex(0x08101a);
@@ -166,7 +166,7 @@ export default class Rubik {
     this.pieces = [];
     this.edges = [];
     const mainMaterial = new THREE.MeshLambertMaterial();
-    const pieceSize = 21;
+    const pieceSize = 50;
     const edgeGeometry = RoundedPlaneGeometry(
 			pieceSize,
 			this.geometry.edgeCornerRoundness,
@@ -182,21 +182,16 @@ export default class Rubik {
 			piece.edgesName = '';
 
 			position.edges.forEach( position => {
-
 				const edge = new THREE.Mesh( edgeGeometry, mainMaterial.clone() );
 				const name = [ 'L', 'R', 'D', 'U', 'B', 'F' ][ position ];
-        const distance = pieceSize/2;
-        console.log([ 0, 0, 0, 0, - 1, 1 ][ position ]);
-				// edge.position.set(
-				//   distance * [ - 1, 1, 0, 0, 0, 0 ][ position ],
-				//   distance * [ 0, 0, - 1, 1, 0, 0 ][ position ],
-        //   distance * [ 0, 0, 0, 0, - 1, 1 ][ position ]
-        // );
-        edge.position.set(
-          50,
-          0,
-          0
-				);
+        const distance = pieceSize/2+50;
+        console.log(position);
+        
+				edge.position.set(
+				  distance * [ - 1, 1, 0, 0, 0, 0 ][ position ],
+				  distance * [ 0, 0, - 1, 1, 0, 0 ][ position ],
+          distance * [ 0, 0, 0, 0, - 1, 1 ][ position ]
+        );
 
 				edge.rotation.set(
 				  Math.PI / 2 * [ 0, 0, 1, - 1, 0, 0 ][ position ],
