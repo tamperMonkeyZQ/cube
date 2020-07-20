@@ -47,7 +47,7 @@ export default class Main {
   initCamera() {
     // this.camera = new THREE.PerspectiveCamera(45, this.width / this.height, 1, 1500);
     this.camera = new THREE.PerspectiveCamera( 45, this.width / this.height, 1, 10000 );
-    this.camera.position.set(0, 0, 300 / this.camera.aspect);
+    this.camera.position.set(0, 0, 2.1 / this.camera.aspect);
     this.camera.up.set(0, 1, 0);//正方向
     this.camera.lookAt(this.viewCenter);
 

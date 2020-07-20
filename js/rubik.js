@@ -50,7 +50,7 @@ function SimpleCube(x, y, z, num, len, colors) {
       // var cubegeo = new THREE.BoxGeometry(30, 30, 30);
       // var cube = new THREE.Mesh(cubegeo, materials);
       var cube = new THREE.Mesh(
-        new RoundedBoxGeometry(49.5, 0.12, 3 ),
+        new RoundedBoxGeometry(50, 0.12, 3 ),
         // new THREE.MeshLambertMaterial().clone()
       );
       cube.material.color.setHex(0x08101a);
@@ -119,15 +119,14 @@ export default class Rubik {
     this.generatePositions();
     this.generateEdges();
     this.updateColors(themes.getColors());
-    console.log(this.edges);
-    for (var i = 0; i < this.cubes.length; i++) {
-      var item = this.cubes[i];
+    for (var i = 0; i < this.pieces.length; i++) {
+      var item = this.pieces[i];
       this.main.scene.add(item);
     }
-    for (var i = 0; i < this.edges.length; i++) {
-      var item = this.edges[i];
-      this.main.scene.add(item);
-    }
+    // for (var i = 0; i < this.edges.length; i++) {
+    //   var item = this.edges[i];
+    //   this.main.scene.add(item);
+    // }
   }
   generatePositions() {
 
@@ -166,7 +165,11 @@ export default class Rubik {
     this.pieces = [];
     this.edges = [];
     const mainMaterial = new THREE.MeshLambertMaterial();
-    const pieceSize = 50;
+    const pieceSize = 1/3;
+		const pieceMesh = new THREE.Mesh(
+			new RoundedBoxGeometry( pieceSize, this.geometry.pieceCornerRadius, 3 ),
+			mainMaterial.clone()
+		);
     const edgeGeometry = RoundedPlaneGeometry(
 			pieceSize,
 			this.geometry.edgeCornerRoundness,
@@ -174,18 +177,19 @@ export default class Rubik {
     );
     this.positions.forEach( ( position, index ) => {
 
-			const piece = new THREE.Object3D();
+      const piece = new THREE.Object3D();
+      const pieceCube = pieceMesh.clone();
 			const pieceEdges = [];
 
-			piece.position.copy( position.clone().divideScalar( 3 ) );
+      piece.position.copy( position.clone().divideScalar( 3 ) );
+      piece.add( pieceCube );
 			piece.name = index;
 			piece.edgesName = '';
 
 			position.edges.forEach( position => {
 				const edge = new THREE.Mesh( edgeGeometry, mainMaterial.clone() );
 				const name = [ 'L', 'R', 'D', 'U', 'B', 'F' ][ position ];
-        const distance = pieceSize/2+50;
-        console.log(position);
+        const distance = pieceSize/2;
         
 				edge.position.set(
 				  distance * [ - 1, 1, 0, 0, 0, 0 ][ position ],
@@ -213,7 +217,8 @@ export default class Rubik {
 
 			} );
 
-			piece.userData.edges = pieceEdges;
+      piece.userData.edges = pieceEdges;
+      piece.userData.cube = pieceCube;
 
 			piece.userData.start = {
 				position: piece.position.clone(),
@@ -221,7 +226,7 @@ export default class Rubik {
 			};
 
 			this.pieces.push( piece );
-		} );
+    } );
 
   }
 
@@ -229,7 +234,7 @@ export default class Rubik {
 
 		if ( typeof this.pieces !== 'object' && typeof this.edges !== 'object' ) return;
 
-    // this.pieces.forEach( piece => piece.userData.cube.material.color.setHex( colors.P ) );
+    this.pieces.forEach( piece => piece.userData.cube.material.color.setHex( colors.P ) );
     // var edge = this.edges.pop();
     // edge.material.color.setHex(colors[ edge.name ])
     this.edges.forEach( edge => edge.material.color.setHex(colors[ edge.name ]));
