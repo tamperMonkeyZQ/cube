@@ -3,29 +3,6 @@ import { RoundedBoxGeometry } from './plugins/RoundedBoxGeometry.js';
 import { RoundedPlaneGeometry } from './plugins/RoundedPlaneGeometry.js';
 import Themes from './Themes';
 
-/**
- * 生成canvas素材
- */
-function faces(rgbaColor) {
-  var canvas = document.createElement('canvas');
-  canvas.width = 256;
-  canvas.height = 256;
-  var context = canvas.getContext('2d');
-  //画一个宽高都是256的黑色正方形
-  context.fillStyle = 'rgba(0,0,0,1)';
-  context.fillRect(0, 0, 256, 256);
-  //在内部用某颜色的16px宽的线再画一个宽高为224的圆角正方形并用改颜色填充
-  context.rect(16, 16, 224, 224);
-  context.lineJoin = 'round';
-  context.lineWidth = 16;
-  context.fillStyle = rgbaColor;
-  context.strokeStyle = rgbaColor;
-  context.stroke();
-  context.fill();
-  return canvas;
-}
-
-
 export default class Rubik {
   constructor(main) {
     this.size = 3;
@@ -164,7 +141,7 @@ export default class Rubik {
   }
   
   /**
-   * 转动动画
+   * 转动视图动画
    * currentstamp 当前时间
    * startstamp   开始时间
    */
@@ -232,6 +209,79 @@ export default class Rubik {
     if (!isAnimationEnd) {
       requestAnimationFrame(function (timestamp) {
         self.rotateAnimation(elements, direction, timestamp, startstamp, currentstamp, callback, totalTime);
+      });
+    } else {
+      callback();
+    }
+  }
+  /**
+   * 
+   * 转动魔方动画
+   */
+  rotateCubeAnimation(elements, direction, currentstamp, startstamp, laststamp, callback, totalTime) {
+    var self = this;
+    var isAnimationEnd = false;//动画是否结束
+
+    if (startstamp === 0) {
+      startstamp = currentstamp;
+      laststamp = currentstamp;
+    }
+    if (currentstamp - startstamp >= totalTime) {
+      isAnimationEnd = true;
+      currentstamp = startstamp + totalTime;
+    }
+    var rotateMatrix = new THREE.Matrix4();//旋转矩阵
+    var origin = new THREE.Vector3(0, 0, 0);
+    var xLine = new THREE.Vector3(1, 0, 0);
+    var yLine = new THREE.Vector3(0, 1, 0);
+    var zLine = new THREE.Vector3(0, 0, 1);
+
+    switch (direction) {
+      case 0.1:
+      case 1.2:
+      case 2.4:
+      case 3.3:
+        rotateMatrix = this.rotateAroundWorldAxis(origin, zLine, -90 * Math.PI / 180 * (currentstamp - laststamp) / totalTime);
+        break;
+      case 0.2:
+      case 1.1:
+      case 2.3:
+      case 3.4:
+        rotateMatrix = this.rotateAroundWorldAxis(origin, xLine, -90 * Math.PI / 180 * (currentstamp - laststamp) / totalTime);
+        break;
+      case 0.4:
+      case 1.3:
+      case 4.3:
+      case 5.4:
+        rotateMatrix = this.rotateAroundWorldAxis(origin, yLine, -90 * Math.PI / 180 * (currentstamp - laststamp) / totalTime);
+        break;
+      case 1.4:
+      case 0.3:
+      case 4.4:
+      case 5.3:
+        rotateMatrix = this.rotateAroundWorldAxis(origin, yLine, 90 * Math.PI / 180 * (currentstamp - laststamp) / totalTime);
+        break;
+      case 2.2:
+      case 3.1:
+      case 4.1:
+      case 5.2:
+        rotateMatrix = this.rotateAroundWorldAxis(origin, zLine, -90 * Math.PI / 180 * (currentstamp - laststamp) / totalTime);
+        break;
+      case 2.1:
+      case 3.2:
+      case 4.2:
+      case 5.1:
+        rotateMatrix = this.rotateAroundWorldAxis(origin, zLine, 90 * Math.PI / 180 * (currentstamp - laststamp) / totalTime);
+        break;
+      default:
+        break;
+    }
+    for (var i = 0; i < elements.length; i++) {
+      elements[i].applyMatrix(rotateMatrix);
+    }
+    if (!isAnimationEnd) {
+      requestAnimationFrame(function (timestamp) {
+        self.rotateCubeAnimation(elements, direction, timestamp, startstamp, currentstamp, callback, totalTime);
       });
     } else {
       callback();
@@ -437,5 +487,65 @@ export default class Rubik {
       0, 0, 0, 1);
 
     return matrix4;
+  }
+  /**
+   * 旋转R层
+   */
+  rotateLayer(intersect,direction,callback){
+    var self = this;
+    var elements = [];
+    switch(direction){
+      case 0.1:
+      case 1.2:
+      case 2.4:
+      case 3.3:
+        this.pieces.forEach(piece=>{
+          if(Math.abs(intersect.object.parent.position.z - 1/3)<0.001)
+          elements.push(piece);
+        })
+        break;
+      case 0.2:
+      case 1.1:
+      case 2.3:
+      case 3.4:
+        this.pieces.forEach(piece=>{
+          if(Math.abs(piece.position.x - 1/3)<0.001)
+          elements.push(piece);
+        })
+        break;
+      case 0.4:
+      case 1.3:
+      case 4.3:
+      case 5.4:
+        rotateMatrix = this.rotateAroundWorldAxis(origin, yLine, -90 * Math.PI / 180 * (currentstamp - laststamp) / totalTime);
+        break;
+      case 1.4:
+      case 0.3:
+      case 4.4:
+      case 5.3:
+        rotateMatrix = this.rotateAroundWorldAxis(origin, yLine, 90 * Math.PI / 180 * (currentstamp - laststamp) / totalTime);
+        break;
+      case 2.2:
+      case 3.1:
+      case 4.1:
+      case 5.2:
+        rotateMatrix = this.rotateAroundWorldAxis(origin, zLine, -90 * Math.PI / 180 * (currentstamp - laststamp) / totalTime);
+        break;
+      case 2.1:
+      case 3.2:
+      case 4.2:
+      case 5.1:
+        rotateMatrix = this.rotateAroundWorldAxis(origin, zLine, 90 * Math.PI / 180 * (currentstamp - laststamp) / totalTime);
+        break;
+      default:
+        break;
+    }
+    requestAnimationFrame(function (timestamp) {
+      self.rotateCubeAnimation(elements, direction, timestamp, 0, 0, function () {
+        if (callback) {
+          callback();
+        }
+      }, 250);
+    });
   }
 }

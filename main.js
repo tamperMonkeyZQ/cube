@@ -45,7 +45,7 @@ export default class Main {
       context: this.context
     });
     this.renderer.setSize(this.width, this.height);
-    this.renderer.setClearColor(0xFFFFFF, 1.0);
+    this.renderer.setClearColor('rgb(255,255,255)', 0.9);
     canvas.width = this.width * this.devicePixelRatio;
     canvas.height = this.height * this.devicePixelRatio;
     this.renderer.setPixelRatio(this.devicePixelRatio);
@@ -132,6 +132,7 @@ export default class Main {
         this.movePoint = this.intersect.point;
         if (!this.movePoint.equals(this.startPoint)) {//触摸点和滑动点不一样则意味着可以得到滑动方向
           this.rotateRubik();
+          
         }
       }
       if (!this.isRotating && this.startPoint && !this.intersect) {//触摸点没在魔方上
@@ -164,22 +165,15 @@ export default class Main {
     }
     if (targetIntersect) {
       var intersects = this.raycaster.intersectObjects(targetIntersect,true);
-      if (intersects.length >= 2) {
-        if (intersects[0].object.cubeType === 'coverCube') {
-          this.intersect = intersects[1];
-          this.normalize = intersects[0].face.normal;
-        } else {
-          this.intersect = intersects[0];
-          this.normalize = intersects[1].face.normal;
-        }
-      }
+      this.intersect = intersects[0];
+      // this.normalize = intersects[0].face.normal;
     }
   }
     /**
    * 转动视图
    */
   rotateView() {
-    var self = this;
+      var self = this;
       this.isRotating = true;//转动标识置为true
       //计算整体转动方向
       var direction = this.getViewDirection(this.startPoint, this.movePoint);
@@ -231,5 +225,17 @@ export default class Main {
     this.intersect = null;
     this.startPoint = null;
     this.movePoint = null;
+  }
+
+  /**
+   * 魔方层转动
+   */
+  rotateRubik(){
+    var self = this;
+    this.isRotating = true;//转动标识置为true
+    var direction = this.getViewDirection(this.startPoint, this.movePoint);
+    this.rubik.rotateLayer(this.intersect,direction,function () {
+       self.resetRotateParams();
+    });
   }
 }
