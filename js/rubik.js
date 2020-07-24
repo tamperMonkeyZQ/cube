@@ -5,7 +5,7 @@ import Themes from './Themes';
 
 export default class Rubik {
   constructor(main) {
-    this.size = 3;
+    this.size = 2;
     this.defaultTotalTime = 250;//默认转动动画时长
     this.main = main;
     this.object = new THREE.Object3D();
@@ -21,6 +21,7 @@ export default class Rubik {
     var themes = new Themes();
     this.generatePositions();
     this.generateEdges();
+    this.generateHelper();
     this.updateColors(themes.getColors());
     for (var i = 0; i < this.pieces.length; i++) {
       var item = this.pieces[i];
@@ -108,8 +109,8 @@ export default class Rubik {
 					this.geometry.edgeScale
 				);
 
-				edge.name = name;
-
+        edge.name = name;
+        edge.cubeType = 'edge';
 				piece.add( edge );
 				pieceEdges.push( name );
 				this.edges.push( edge );
@@ -127,6 +128,18 @@ export default class Rubik {
 			this.pieces.push( piece );
     } );
 
+  }
+  generateHelper(){
+    var width = 1;
+    var cubegeo = new THREE.BoxGeometry(width, width, width);
+    var hex = 0x000000;
+    for (var i = 0; i < cubegeo.faces.length; i ++) {
+      cubegeo.faces[i].color.setHex(hex);
+    }
+    var cubemat = new THREE.MeshBasicMaterial({ vertexColors: THREE.FaceColors, opacity: 0, transparent: true });
+    this.container = new THREE.Mesh(cubegeo, cubemat);
+    this.container.cubeType = 'coverCube';
+    this.main.scene.add(this.container);
   }
 
   updateColors( colors ) {
@@ -247,7 +260,7 @@ export default class Rubik {
       case 1.1:
       case 2.3:
       case 3.4:
-        rotateMatrix = this.rotateAroundWorldAxis(origin, xLine, -90 * Math.PI / 180 * (currentstamp - laststamp) / totalTime);
+        rotateMatrix = this.rotateAroundWorldAxis(origin, zLine, 90 * Math.PI / 180 * (currentstamp - laststamp) / totalTime);
         break;
       case 0.4:
       case 1.3:
@@ -265,13 +278,13 @@ export default class Rubik {
       case 3.1:
       case 4.1:
       case 5.2:
-        rotateMatrix = this.rotateAroundWorldAxis(origin, zLine, -90 * Math.PI / 180 * (currentstamp - laststamp) / totalTime);
+        rotateMatrix = this.rotateAroundWorldAxis(origin, xLine, 90 * Math.PI / 180 * (currentstamp - laststamp) / totalTime);
         break;
       case 2.1:
       case 3.2:
       case 4.2:
       case 5.1:
-        rotateMatrix = this.rotateAroundWorldAxis(origin, zLine, 90 * Math.PI / 180 * (currentstamp - laststamp) / totalTime);
+        rotateMatrix = this.rotateAroundWorldAxis(origin, xLine, -90 * Math.PI / 180 * (currentstamp - laststamp) / totalTime);
         break;
       default:
         break;
@@ -500,7 +513,7 @@ export default class Rubik {
       case 2.4:
       case 3.3:
         this.pieces.forEach(piece=>{
-          if(Math.abs(intersect.object.parent.position.z - 1/3)<0.001)
+          if(Math.abs(intersect.object.parent.position.z - piece.position.z)<0.001)
           elements.push(piece);
         })
         break;
@@ -509,7 +522,7 @@ export default class Rubik {
       case 2.3:
       case 3.4:
         this.pieces.forEach(piece=>{
-          if(Math.abs(piece.position.x - 1/3)<0.001)
+          if(Math.abs(intersect.object.parent.position.z - piece.position.z)<0.001)
           elements.push(piece);
         })
         break;
@@ -517,25 +530,37 @@ export default class Rubik {
       case 1.3:
       case 4.3:
       case 5.4:
-        rotateMatrix = this.rotateAroundWorldAxis(origin, yLine, -90 * Math.PI / 180 * (currentstamp - laststamp) / totalTime);
+        this.pieces.forEach(piece=>{
+          if(Math.abs(intersect.object.parent.position.y - piece.position.y)<0.001)
+          elements.push(piece);
+        })
         break;
       case 1.4:
       case 0.3:
       case 4.4:
       case 5.3:
-        rotateMatrix = this.rotateAroundWorldAxis(origin, yLine, 90 * Math.PI / 180 * (currentstamp - laststamp) / totalTime);
+        this.pieces.forEach(piece=>{
+          if(Math.abs(intersect.object.parent.position.y - piece.position.y)<0.001)
+          elements.push(piece);
+        })
         break;
       case 2.2:
       case 3.1:
       case 4.1:
       case 5.2:
-        rotateMatrix = this.rotateAroundWorldAxis(origin, zLine, -90 * Math.PI / 180 * (currentstamp - laststamp) / totalTime);
+        this.pieces.forEach(piece=>{
+          if(Math.abs(intersect.object.parent.position.x - piece.position.x)<0.001)
+          elements.push(piece);
+        })
         break;
       case 2.1:
       case 3.2:
       case 4.2:
       case 5.1:
-        rotateMatrix = this.rotateAroundWorldAxis(origin, zLine, 90 * Math.PI / 180 * (currentstamp - laststamp) / totalTime);
+        this.pieces.forEach(piece=>{
+          if(Math.abs(intersect.object.parent.position.x - piece.position.x)<0.001)
+          elements.push(piece);
+        })
         break;
       default:
         break;
@@ -547,5 +572,35 @@ export default class Rubik {
         }
       }, 250);
     });
+  }
+  
+  /**
+   * 获得自身坐标系的坐标轴在世界坐标系中坐标
+   */
+  updateCurLocalAxisInWorld() {
+    var center = new THREE.Vector3(0, 0, 0);
+    var xPoint = new THREE.Vector3(1, 0, 0);
+    var xPointAd = new THREE.Vector3(-1, 0, 0);
+    var yPoint = new THREE.Vector3(0, 1, 0);
+    var yPointAd = new THREE.Vector3(0, -1, 0);
+    var zPoint = new THREE.Vector3(0, 0, 1);
+    var zPointAd = new THREE.Vector3(0, 0, -1);
+
+    var matrix = this.main.scene.matrixWorld;//魔方的在世界坐标系的变换矩阵
+    center.applyMatrix4(matrix);
+    xPoint.applyMatrix4(matrix);
+    xPointAd.applyMatrix4(matrix);
+    yPoint.applyMatrix4(matrix);
+    yPointAd.applyMatrix4(matrix);
+    zPoint.applyMatrix4(matrix);
+    zPointAd.applyMatrix4(matrix);
+
+    this.center = center;
+    this.xLine = xPoint.sub(center);
+    this.xLineAd = xPointAd.sub(center);
+    this.yLine = yPoint.sub(center);
+    this.yLineAd = yPointAd.sub(center);
+    this.zLine = zPoint.sub(center);
+    this.zLineAd = zPointAd.sub(center);
   }
 }
