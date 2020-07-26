@@ -5,7 +5,7 @@ import Themes from './Themes';
 
 export default class Rubik {
   constructor(main) {
-    this.size = 2;
+    this.size = 3;
     this.defaultTotalTime = 250;//默认转动动画时长
     this.main = main;
     this.object = new THREE.Object3D();
@@ -23,6 +23,7 @@ export default class Rubik {
     this.generateEdges();
     this.generateHelper();
     this.updateColors(themes.getColors());
+    // this.main.scene.add(pieces);
     for (var i = 0; i < this.pieces.length; i++) {
       var item = this.pieces[i];
       this.main.scene.add(item);
@@ -83,6 +84,7 @@ export default class Rubik {
 
       piece.position.copy( position.clone().divideScalar( 3 ) );
       piece.add( pieceCube );
+      piece.cubeType = "realCube";
 			piece.name = index;
 			piece.edgesName = '';
 
@@ -120,7 +122,7 @@ export default class Rubik {
       piece.userData.edges = pieceEdges;
       piece.userData.cube = pieceCube;
 
-			piece.userData.start = {
+			piece.userData.cube.start = {
 				position: piece.position.clone(),
 				rotation: piece.rotation.clone(),
 			};
@@ -249,7 +251,7 @@ export default class Rubik {
     var yLine = new THREE.Vector3(0, 1, 0);
     var zLine = new THREE.Vector3(0, 0, 1);
 
-    switch (direction) {
+    switch (direction){
       case 0.1:
       case 1.2:
       case 2.4:
@@ -259,16 +261,22 @@ export default class Rubik {
       case 0.2:
       case 1.1:
       case 2.3:
-      case 3.4:
         rotateMatrix = this.rotateAroundWorldAxis(origin, zLine, 90 * Math.PI / 180 * (currentstamp - laststamp) / totalTime);
+        break;
+      case 3.4:
+        rotateMatrix = this.rotateAroundWorldAxis(origin, zLine, -90 * Math.PI / 180 * (currentstamp - laststamp) / totalTime);
         break;
       case 0.4:
       case 1.3:
       case 4.3:
-      case 5.4:
         rotateMatrix = this.rotateAroundWorldAxis(origin, yLine, -90 * Math.PI / 180 * (currentstamp - laststamp) / totalTime);
         break;
+      case 5.4:
+        rotateMatrix = this.rotateAroundWorldAxis(origin, yLine, 90 * Math.PI / 180 * (currentstamp - laststamp) / totalTime);
+        break;
       case 1.4:
+        rotateMatrix = this.rotateAroundWorldAxis(origin, zLine, 90 * Math.PI / 180 * (currentstamp - laststamp) / totalTime);
+        break;
       case 0.3:
       case 4.4:
       case 5.3:
@@ -401,67 +409,7 @@ export default class Rubik {
     return direction;
   }
 
-  /**
-   * 根据触摸方块的索引以及滑动方向获得转动元素
-   */
-  getBoxs(cubeIndex, direction) {
-    var targetIndex = cubeIndex;
-    targetIndex = targetIndex - this.minCubeIndex;
-    var numI = parseInt(targetIndex / 9);
-    var numJ = targetIndex % 9;
-    var boxs = [];
-    //根据绘制时的规律判断 no = i*9+j
-    switch (direction) {
-      case 0.1:
-      case 0.2:
-      case 1.1:
-      case 1.2:
-      case 2.3:
-      case 2.4:
-      case 3.3:
-      case 3.4:
-        for (var i = 0; i < this.cubes.length; i++) {
-          var tempId = this.cubes[i].cubeIndex - this.minCubeIndex;
-          if (numI === parseInt(tempId / 9)) {
-            boxs.push(this.cubes[i]);
-          }
-        }
-        break;
-      case 0.3:
-      case 0.4:
-      case 1.3:
-      case 1.4:
-      case 4.3:
-      case 4.4:
-      case 5.3:
-      case 5.4:
-        for (var i = 0; i < this.cubes.length; i++) {
-          var tempId = this.cubes[i].cubeIndex - this.minCubeIndex;
-          if (parseInt(numJ / 3) === parseInt(tempId % 9 / 3)) {
-            boxs.push(this.cubes[i]);
-          }
-        }
-        break;
-      case 2.1:
-      case 2.2:
-      case 3.1:
-      case 3.2:
-      case 4.1:
-      case 4.2:
-      case 5.1:
-      case 5.2:
-        for (var i = 0; i < this.cubes.length; i++) {
-          var tempId = this.cubes[i].cubeIndex - this.minCubeIndex;
-          if (tempId % 9 % 3 === numJ % 3) {
-            boxs.push(this.cubes[i]);
-          }
-        }
-        break;
-      default:
-        break;
-    }
-    return boxs;
-  }
+
   /**
    * 转动魔方整体
    */
@@ -509,57 +457,42 @@ export default class Rubik {
     var elements = [];
     switch(direction){
       case 0.1:
-      case 1.2:
-      case 2.4:
-      case 3.3:
-        this.pieces.forEach(piece=>{
-          if(Math.abs(intersect.object.parent.position.z - piece.position.z)<0.001)
-          elements.push(piece);
-        })
-        break;
       case 0.2:
       case 1.1:
+      case 1.2:
+      case 1.4:
       case 2.3:
+      case 2.4:
+      case 3.3:
       case 3.4:
         this.pieces.forEach(piece=>{
           if(Math.abs(intersect.object.parent.position.z - piece.position.z)<0.001)
-          elements.push(piece);
+            elements.push(piece);
         })
         break;
+      case 0.3:
       case 0.4:
       case 1.3:
       case 4.3:
+      case 4.4:
+      case 5.3:
       case 5.4:
         this.pieces.forEach(piece=>{
           if(Math.abs(intersect.object.parent.position.y - piece.position.y)<0.001)
-          elements.push(piece);
-        })
-        break;
-      case 1.4:
-      case 0.3:
-      case 4.4:
-      case 5.3:
-        this.pieces.forEach(piece=>{
-          if(Math.abs(intersect.object.parent.position.y - piece.position.y)<0.001)
-          elements.push(piece);
-        })
-        break;
-      case 2.2:
-      case 3.1:
-      case 4.1:
-      case 5.2:
-        this.pieces.forEach(piece=>{
-          if(Math.abs(intersect.object.parent.position.x - piece.position.x)<0.001)
-          elements.push(piece);
+            elements.push(piece);
         })
         break;
       case 2.1:
+      case 2.2:
+      case 3.1:
       case 3.2:
+      case 4.1:
       case 4.2:
       case 5.1:
+      case 5.2:
         this.pieces.forEach(piece=>{
           if(Math.abs(intersect.object.parent.position.x - piece.position.x)<0.001)
-          elements.push(piece);
+            elements.push(piece);
         })
         break;
       default:

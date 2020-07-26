@@ -130,9 +130,8 @@ export default class Main {
       this.getIntersects(event);
       if (!this.isRotating && this.startPoint && this.intersect) {//滑动点在魔方上且魔方没有转动
         this.movePoint = this.intersect.point;
-        if (!this.movePoint.equals(this.startPoint)) {//触摸点和滑动点不一样则意味着可以得到滑动方向
+        if (!this.movePoint.equals(this.startPoint)){
           this.rotateRubik();
-          
         }
       }
       if (!this.isRotating && this.startPoint && !this.intersect) {//触摸点没在魔方上
@@ -161,27 +160,27 @@ export default class Main {
     var rubikTypeName;
     var targetIntersect = [];
     for (var i = 0; i < this.scene.children.length; i++) {
-      targetIntersect.push(this.scene.children[i]);
+      var item = this.scene.children[i];
+      if(item.cubeType == 'realCube')
+        {
+          targetIntersect.push(this.scene.children[i].userData.cube);
+        }
+      else 
+        targetIntersect.push(this.scene.children[i]);
     }
     if (targetIntersect) {
-      var intersects = this.raycaster.intersectObjects(targetIntersect,true);
-      console.log(intersects);
-      if(intersects.length==2){
-        for(i = 0;i<2;i++){
-          if(intersects[i].object.cubeType == 'coverCube')
-            this.normalize = intersects[i].face.normal;
-          if(intersects[i].object.cubeType == 'edge')
-            this.intersect = intersects[i];
+      var intersects = this.raycaster.intersectObjects(targetIntersect);
+        if(intersects[0].object.cubeType == "coverCube") 
+        {
+          if(this.normalize == null)
+            this.normalize = intersects[0].face.normal;
+          this.intersect = intersects[1];
+        }else{
+          if(this.normalize == null)
+            this.normalize = intersects[1].face.normal;
+          this.intersect = intersects[0];
         }
-      } 
-      if(intersects.length>=3){
-        for(i = 0;i<3;i++){
-          if(intersects[i].object.cubeType == 'coverCube')
-            this.normalize = intersects[i].face.normal;
-          if(intersects[i].object.cubeType == 'edge')
-            this.intersect = intersects[i];
-        }
-      } 
+      
     }
   }
     /**
@@ -238,6 +237,7 @@ export default class Main {
   resetRotateParams() {
     this.isRotating = false;
     this.intersect = null;
+    this.normalize = null;
     this.startPoint = null;
     this.movePoint = null;
   }
@@ -249,6 +249,7 @@ export default class Main {
     var self = this;
     this.isRotating = true;//转动标识置为true
     var sub = this.movePoint.sub(this.startPoint);
+    console.log(self.normalize);
     var direction = this.rubik.getDirection(sub, self.normalize);
     this.rubik.rotateLayer(this.intersect,direction,function () {
        self.resetRotateParams();
