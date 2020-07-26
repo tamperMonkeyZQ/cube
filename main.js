@@ -170,7 +170,9 @@ export default class Main {
     }
     if (targetIntersect) {
       var intersects = this.raycaster.intersectObjects(targetIntersect);
-        if(intersects[0].object.cubeType == "coverCube") 
+      if(!intersects.length>0)
+        return;
+        if(intersects[0].object.cubeType == "coverCube" && intersects) 
         {
           if(this.normalize == null)
             this.normalize = intersects[0].face.normal;
